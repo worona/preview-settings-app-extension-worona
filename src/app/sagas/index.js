@@ -1,10 +1,13 @@
-/* eslint-disable no-constant-condition */
+/* eslint-disable no-constant-condition, no-unused-vars */
 import Connection from 'worona-asteroid';
-import { delay } from 'redux-saga';
-import { fork, call, race, take, put } from 'redux-saga/effects';
+import { delay, takeEvery } from 'redux-saga';
+import { fork, call, race, take, put, select } from 'redux-saga/effects';
 import * as actions from '../actions';
+import * as types from '../types';
+import * as deps from '../deps';
+import * as sagaCreators from '../sagaCreators';
 
-function* connect(connection) {
+export function* connect(connection) {
   yield call([connection, connection.start]);
   yield put(actions.connectionStarted());
   const connectedChannel = yield call([connection, connection.connectedEventChannel]);
@@ -26,9 +29,28 @@ function* connect(connection) {
   }
 }
 
+export function* settingsUpdated({ id, event, fields: { woronaInfo, ...fields } }) {
+  let newFields = fields;
+  if (event === 'changed') {
+    const settings = yield select(deps.selectorCreators.getSettingsById(id));
+    newFields = { ...settings, ...fields };
+  }
+  yield put(deps.actions.settingsUpdated({
+    _id: id,
+    fields: newFields,
+  }));
+}
+
 export default function* previewSettingsSagas() {
   const connection = new Connection({ endpoint: 'wss://meteor.worona.io/websocket' });
+  const siteId = yield select(deps.selectors.getSiteId);
   yield [
     fork(connect, connection),
+    fork(sagaCreators.collectionCreator({ collection: 'settings-live', connection })),
+    fork(sagaCreators.subscriptionCreator(
+      { connection, subscription: 'app-settings-live', params: [{ siteId }] })),
+    takeEvery(({ type, collection }) =>
+      type === types.COLLECTION_MODIFIED && collection === 'settings-live',
+      settingsUpdated),
   ];
 }
