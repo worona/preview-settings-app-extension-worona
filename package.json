@@ -38,14 +38,9 @@
     "authors": [
       "luis@worona.org"
     ],
-    "private": false,
     "app": {
       "type": "extension",
       "namespace": "previewSettings",
-      "default": false,
-      "name": "Preview Settings",
-      "description": "App package to connect with the backend via websockets",
-      "image": "",
       "listed": false
     }
   }
