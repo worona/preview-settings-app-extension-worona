@@ -1,4 +1,4 @@
-/* eslint-disable no-constant-condition, no-unused-vars */
+/* eslint-disable no-constant-condition, no-unused-vars, no-undef */
 import Connection from 'worona-asteroid';
 import { delay, takeEvery } from 'redux-saga';
 import { fork, call, race, take, put, select } from 'redux-saga/effects';
@@ -42,7 +42,8 @@ export function* settingsUpdated({ id, event, fields: { woronaInfo, ...fields } 
 }
 
 export default function* previewSettingsSagas() {
-  const connection = new Connection({ endpoint: 'wss://meteor.worona.io/websocket' });
+  const meteor = window.location.host === 'preapp.worona.org' ? 'premeteor' : 'meteor';
+  const connection = new Connection({ endpoint: `wss://${meteor}.worona.io/websocket` });
   const siteId = yield select(deps.selectors.getSiteId);
   yield [
     fork(connect, connection),
