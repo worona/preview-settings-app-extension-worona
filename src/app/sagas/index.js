@@ -35,23 +35,35 @@ export function* settingsUpdated({ id, event, fields: { woronaInfo, ...fields } 
     const settings = yield select(deps.selectorCreators.getSettingsById(id));
     newFields = { ...settings, ...fields };
   }
-  yield put(deps.actions.settingsUpdated({
-    _id: id,
-    fields: newFields,
-  }));
+  yield put(
+    deps.actions.settingsUpdated({
+      _id: id,
+      fields: newFields,
+    }),
+  );
 }
 
 export default function* previewSettingsSagas() {
-  const meteor = window.location.host === 'preapp.worona.org' ? 'premeteor' : 'meteor';
+  const meteor = window.location.host.startsWith('preapp') ||
+    window.location.host.startsWith('localhost')
+    ? 'premeteor'
+    : 'meteor';
   const connection = new Connection({ endpoint: `wss://${meteor}.worona.io/websocket` });
   const siteId = yield select(deps.selectors.getSiteId);
   yield [
     fork(connect, connection),
     fork(sagaCreators.collectionCreator({ collection: 'settings-live', connection })),
-    fork(sagaCreators.subscriptionCreator(
-      { connection, subscription: 'app-settings-live', params: [{ siteId }] })),
-    takeEvery(({ type, collection }) =>
-      type === types.COLLECTION_MODIFIED && collection === 'settings-live' && event !== 'removed',
-      settingsUpdated),
+    fork(
+      sagaCreators.subscriptionCreator({
+        connection,
+        subscription: 'app-settings-live',
+        params: [{ siteId }],
+      }),
+    ),
+    takeEvery(
+      ({ type, collection }) =>
+        type === types.COLLECTION_MODIFIED && collection === 'settings-live' && event !== 'removed',
+      settingsUpdated,
+    ),
   ];
 }
