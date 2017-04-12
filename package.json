@@ -1,6 +1,6 @@
 {
   "name": "preview-settings-app-extension-worona",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Package to connect with the backend via websockets",
   "scripts": {
     "start": "node node_modules/worona-packages/dist/start.js"
