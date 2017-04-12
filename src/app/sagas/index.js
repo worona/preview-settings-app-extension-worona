@@ -51,7 +51,7 @@ export default function* previewSettingsSagas() {
     fork(sagaCreators.subscriptionCreator(
       { connection, subscription: 'app-settings-live', params: [{ siteId }] })),
     takeEvery(({ type, collection }) =>
-      type === types.COLLECTION_MODIFIED && collection === 'settings-live',
+      type === types.COLLECTION_MODIFIED && collection === 'settings-live' && event !== 'removed',
       settingsUpdated),
   ];
 }
